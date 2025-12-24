@@ -20,7 +20,7 @@
       radial-gradient(1000px 700px at 20% 15%, rgba(70,30,120,.55) 0%, transparent 60%),
       radial-gradient(900px 700px at 85% 20%, rgba(120,25,85,.42) 0%, transparent 60%),
       linear-gradient(160deg,var(--bg1),var(--bg2));
-    overflow-x:hidden; /* no bloqueamos scroll vertical global */
+    overflow-x:hidden;
   }
 
   canvas{position:fixed; inset:0; pointer-events:none; z-index:0;}
@@ -87,7 +87,6 @@
   }
   .dot{width:8px; height:8px; border-radius:50%; background:var(--rose); box-shadow:0 0 18px rgba(255,107,154,.55);}
 
-  /* Pantallas: altura estable en móvil */
   .screen{
     height: calc(100svh - 90px);
     padding: 16px;
@@ -137,21 +136,60 @@
     position:relative;
   }
 
-  /* Envelope (visual) */
+  /* ===== ENVELOPE STAGE ===== */
   .envelopeWrap{
-    height: 142px;
+    height: 152px;
     display:grid;
     place-items:center;
     filter: drop-shadow(0 16px 26px rgba(0,0,0,.40));
-  }
-  .env{
-    width: 240px;
-    height: 140px;
+    z-index: 6;
     position:relative;
+  }
+
+  .envStage{
+    width: 248px;
+    height: 148px;
+    position:relative;
+    transform: translateZ(0);
+    transition: transform 720ms cubic-bezier(.2,.95,.15,1);
+  }
+  .envStage.absorbLift{
+    transform: translateY(-10px) scale(1.01);
+  }
+
+  .slot{
+    position:absolute;
+    left: 16px; right: 16px;
+    top: 58px;
+    height: 10px;
+    border-radius: 999px;
+    background: rgba(0,0,0,.28);
+    border: 1px solid rgba(255,255,255,.10);
+    box-shadow: inset 0 6px 10px rgba(0,0,0,.35);
+    z-index: 7;
+    pointer-events:none;
+  }
+  .slot::after{
+    content:"";
+    position:absolute; inset:0;
+    border-radius: 999px;
+    background: linear-gradient(90deg, transparent, rgba(242,211,138,.18), transparent);
+    opacity:.0;
+    transform: translateX(-30%);
+    transition: opacity 600ms ease, transform 900ms ease;
+  }
+  .envStage.absorbLift .slot::after{
+    opacity:.65;
+    transform: translateX(30%);
+  }
+
+  .env{
+    position:absolute; inset:0;
     border-radius: 18px;
     background: linear-gradient(180deg, rgba(255,255,255,.13), rgba(255,255,255,.06));
     border: 1px solid rgba(255,255,255,.16);
     overflow:hidden;
+    z-index: 5;
   }
   .env::before{
     content:"";
@@ -160,49 +198,60 @@
     clip-path: polygon(0 0, 50% 64%, 100% 0, 100% 100%, 0 100%);
     border-top: 1px solid rgba(255,255,255,.10);
   }
+
   .flap{
     position:absolute; left:0; right:0; top:-1px; height:72%;
     background: linear-gradient(180deg, rgba(242,211,138,.24), rgba(255,107,154,.09));
     clip-path: polygon(0 0, 50% 72%, 100% 0, 100% 100%, 0 100%);
     transform-origin: top center;
-    transform: rotateX(175deg); /* abierto por defecto en pantalla carta */
+    transform: rotateX(175deg);
     transition: transform 1150ms cubic-bezier(.2,.9,.2,1);
     border-bottom: 1px solid rgba(255,255,255,.12);
   }
+  .closing .flap{ transform: rotateX(0deg); }
+
   .seal{
     position:absolute; left:50%; top:62%;
-    transform: translate(-50%,-50%);
-    width: 44px; height: 44px;
+    transform: translate(-50%,-50%) scale(.92);
+    width: 46px; height: 46px;
     border-radius: 50%;
     background: radial-gradient(circle at 30% 30%, rgba(255,255,255,.35), rgba(255,107,154,.22) 55%, rgba(255,107,154,.10));
     border: 1px solid rgba(255,255,255,.18);
     display:grid; place-items:center;
     user-select:none;
+    opacity: .86;
+    transition: transform 520ms cubic-bezier(.2,1.05,.2,1), opacity 520ms ease, box-shadow 520ms ease;
   }
   .seal span{ font-size: 16px; text-shadow: 0 8px 20px rgba(255,107,154,.30); }
 
-  /* Estado "cerrando sobre" */
-  .closing .flap{ transform: rotateX(0deg); }
-  .closing .seal span{ content:""; }
-  .closing .seal{ box-shadow: 0 0 26px rgba(255,107,154,.18); }
+  .sealPop{
+    transform: translate(-50%,-50%) scale(1.18);
+    opacity: 1;
+    box-shadow: 0 0 30px rgba(255,107,154,.22), 0 0 55px rgba(242,211,138,.10);
+  }
 
-  /* Carta card */
+  /* ===== LETTER ===== */
   .letterCard{
     flex: 1;
-    min-height: 0; /* necesario para scroll en flex */
+    min-height: 0;
     padding: 14px;
     border-radius: 18px;
     border: 1px solid rgba(255,255,255,.14);
     background: rgba(255,255,255,.07);
     box-shadow: 0 14px 42px rgba(0,0,0,.33);
     position:relative;
-    overflow: hidden;
-    transition: opacity 1200ms ease, filter 1200ms ease, transform 1200ms ease;
+    overflow: visible;
+    transform: translateZ(0);
+    transition: opacity 1200ms ease, filter 1200ms ease, transform 800ms ease;
+    z-index: 4;
+  }
+  .letterCard.slideUp{
+    transform: translateY(-18px) scale(0.99);
   }
   .letterCard.fadeOut{
     opacity: 0;
-    filter: blur(6px) saturate(.95);
-    transform: translateY(8px) scale(.99);
+    filter: blur(7px) saturate(.95);
+    transform: translateY(10px) scale(.985);
   }
 
   .letterHeader{
@@ -212,14 +261,42 @@
   .letterHeader h2{margin:0; font-size:18px; line-height:1.15;}
   .date{font-size:12px; color:rgba(255,255,255,.62); white-space:nowrap; margin-top:2px;}
 
-  /* Scroller real */
-  .scrollArea{
+  .paperMask{
+    position:relative;
     height: calc(100% - 34px);
+    overflow:hidden;
+    border-radius: 14px;
+  }
+  .paperMask::before{
+    content:"";
+    position:absolute;
+    left:0; right:0;
+    top:0;
+    height: 26px;
+    background: linear-gradient(180deg, rgba(0,0,0,.22), transparent);
+    pointer-events:none;
+    z-index: 3;
+    opacity: .55;
+  }
+
+  .paper{
+    height: 100%;
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
     scroll-behavior: smooth;
     padding-right: 6px;
+    transition: transform 900ms cubic-bezier(.2,.95,.15,1),
+                opacity 900ms ease,
+                filter 900ms ease;
+    position:relative;
+    z-index: 2;
   }
+  .paper.insertIntoSlot{
+    transform: translateY(-160px) scale(0.97);
+    opacity: 0.14;
+    filter: blur(1.6px);
+  }
+
   .type{
     font-size: 15px;
     line-height: 1.65;
@@ -278,24 +355,15 @@
     padding: 16px;
     box-shadow: 0 18px 60px rgba(0,0,0,.45);
   }
-  .finalCard h3{
-    margin: 0 0 6px;
-    font-size: 18px;
-  }
+  .finalCard h3{ margin: 0 0 6px; font-size: 18px; }
   .finalCard p{
     margin: 0 0 12px;
     color: rgba(255,255,255,.75);
     font-size: 14px;
     line-height: 1.5;
   }
-  .finalCard .tiny{
-    font-size: 12.5px;
-    color: rgba(255,255,255,.68);
-    margin-top: 10px;
-  }
-  .finalCard .row{
-    display:flex; gap:10px; margin-top: 12px; flex-wrap:wrap;
-  }
+  .finalCard .tiny{ font-size: 12.5px; color: rgba(255,255,255,.68); margin-top: 10px; }
+  .finalCard .row{ display:flex; gap:10px; margin-top: 12px; flex-wrap:wrap; }
   .finalCard button{
     flex:1;
     border:none;
@@ -313,7 +381,7 @@
     border:none;
   }
 
-  /* Floating buttons */
+  /* Floating */
   .float{
     position: fixed;
     right: 14px;
@@ -346,7 +414,7 @@
   <div class="vignette"></div>
 
   <div class="wrap">
-    <div class="phone" id="phone">
+    <div class="phone">
       <div class="ribbon">
         <div class="badge">Carta Navideña</div>
         <div class="chip"><span class="dot"></span><span id="status">Bloqueada</span></div>
@@ -355,7 +423,7 @@
       <!-- LOCK -->
       <div id="lockScreen" class="screen">
         <h1 class="title">Escribe la canción que marcó tu vida…</h1>
-        <p class="subtitle">La carta ya fue leída una vez… hoy solo queda el final bonito. (Frase secreta para entrar.)</p>
+        <p class="subtitle">La carta ya fue leída… hoy solo queda el final bonito. (Frase secreta para entrar.)</p>
 
         <div class="field">
           <input id="secretInput" type="password" autocomplete="off" placeholder="Frase secreta…" />
@@ -372,24 +440,28 @@
       <!-- LETTER -->
       <div id="letterScreen" class="screen hidden">
         <div class="letterWrap">
-          <!-- SOBRE -->
+
           <div class="envelopeWrap">
-            <div class="env" id="env">
-              <div class="flap"></div>
-              <div class="seal"><span id="sealIcon">✦</span></div>
+            <div class="envStage" id="envStage">
+              <div class="slot"></div>
+              <div class="env" id="env">
+                <div class="flap"></div>
+                <div class="seal" id="seal"><span id="sealIcon">✦</span></div>
+              </div>
             </div>
           </div>
 
-          <!-- CARTA -->
           <div class="letterCard" id="letterCard">
             <div class="letterHeader">
               <h2>Epílogo de Navidad…</h2>
               <div class="date" id="today"></div>
             </div>
 
-            <div class="scrollArea" id="scrollArea">
-              <div class="type" id="typeTarget"></div><span class="cursor" id="cursor"></span>
-              <div class="signature" id="signature">Atentamente, <b>bcaal</b></div>
+            <div class="paperMask">
+              <div class="paper" id="paper">
+                <div class="type" id="typeTarget"></div><span class="cursor" id="cursor"></span>
+                <div class="signature" id="signature">Atentamente, <b>bcaal</b></div>
+              </div>
             </div>
           </div>
 
@@ -398,10 +470,9 @@
             <button class="softBtn" id="replayBtn">🔁 Releer</button>
           </div>
 
-          <!-- OVERLAY FINAL -->
           <div class="finalOverlay" id="finalOverlay">
             <div class="finalCard">
-              <h3>Y listo… la carta se guardó en el corazón ✨</h3>
+              <h3>Y listo… la carta volvió al corazón ✨</h3>
               <p>
                 Ojalá que la próxima Navidad nos encuentre más cerca,
                 y que los abrazos sean <b>físicos</b>, no virtuales.
@@ -412,15 +483,15 @@
                 <button class="primary" id="restartAllBtn">Volver a abrir el sobre</button>
                 <button id="closeOverlayBtn">Cerrar</button>
               </div>
-              <div class="tiny">Si estás en navegador interno (WhatsApp/Facebook), usa “Abrir en Chrome/Safari” para mejor experiencia.</div>
+              <div class="tiny">Tip: si estás en navegador interno (WhatsApp/Facebook), usa “Abrir en Chrome/Safari”.</div>
             </div>
           </div>
+
         </div>
       </div>
     </div>
   </div>
 
-  <!-- Floating -->
   <div class="float">
     <div class="fab" id="musicBtn">🎵<small id="musicLbl">OFF</small></div>
     <div class="fab" id="heartBtn">❤<small>Click</small></div>
@@ -433,7 +504,6 @@
 <script>
   const SECRET = "amapolas";
 
-  // EPÍLOGO: “la carta ya fue leída” + nostalgia + cierre feliz
   const letterText =
 `Y así… la carta llegó a su final.
 
@@ -495,11 +565,14 @@ Feliz Navidad. ✨`;
   const typeTarget = document.getElementById("typeTarget");
   const cursor = document.getElementById("cursor");
   const signature = document.getElementById("signature");
-  const scrollArea = document.getElementById("scrollArea");
+  const paper = document.getElementById("paper");
+
   const copyBtn = document.getElementById("copyBtn");
   const replayBtn = document.getElementById("replayBtn");
 
+  const envStage = document.getElementById("envStage");
   const env = document.getElementById("env");
+  const seal = document.getElementById("seal");
   const sealIcon = document.getElementById("sealIcon");
   const letterCard = document.getElementById("letterCard");
 
@@ -519,10 +592,94 @@ Feliz Navidad. ✨`;
 
   // Helpers
   const delay = (ms) => new Promise(r => setTimeout(r, ms));
-  function isNearBottom(el, threshold = 60){
+  function isNearBottom(el, threshold = 90){
     return el.scrollTop + el.clientHeight >= el.scrollHeight - threshold;
   }
 
+  // ===== WebAudio SFX (sin archivos extra) =====
+  let audioCtx = null;
+  function ensureAudioCtx(){
+    if(!audioCtx){
+      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    }
+    if(audioCtx.state === "suspended") audioCtx.resume();
+  }
+
+  function playWhoosh(duration=0.55){
+    if(!audioCtx) return;
+    const t0 = audioCtx.currentTime;
+    const noiseBuf = audioCtx.createBuffer(1, audioCtx.sampleRate * duration, audioCtx.sampleRate);
+    const data = noiseBuf.getChannelData(0);
+    for(let i=0;i<data.length;i++){
+      data[i] = (Math.random()*2-1) * (1 - i/data.length);
+    }
+    const noise = audioCtx.createBufferSource();
+    noise.buffer = noiseBuf;
+
+    const filter = audioCtx.createBiquadFilter();
+    filter.type = "bandpass";
+    filter.frequency.setValueAtTime(800, t0);
+    filter.frequency.exponentialRampToValueAtTime(1200, t0 + duration*0.55);
+    filter.Q.setValueAtTime(0.7, t0);
+
+    const gain = audioCtx.createGain();
+    gain.gain.setValueAtTime(0.0001, t0);
+    gain.gain.exponentialRampToValueAtTime(0.22, t0 + 0.06);
+    gain.gain.exponentialRampToValueAtTime(0.0001, t0 + duration);
+
+    noise.connect(filter).connect(gain).connect(audioCtx.destination);
+    noise.start(t0);
+    noise.stop(t0 + duration);
+  }
+
+  function playClick(){
+    if(!audioCtx) return;
+    const t0 = audioCtx.currentTime;
+
+    // pequeño "click" con oscilador + envolvente muy corta
+    const osc = audioCtx.createOscillator();
+    osc.type = "triangle";
+    osc.frequency.setValueAtTime(420, t0);
+
+    const gain = audioCtx.createGain();
+    gain.gain.setValueAtTime(0.0001, t0);
+    gain.gain.exponentialRampToValueAtTime(0.18, t0 + 0.005);
+    gain.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.06);
+
+    // un poco de filtro para suavizar
+    const filter = audioCtx.createBiquadFilter();
+    filter.type = "lowpass";
+    filter.frequency.setValueAtTime(1200, t0);
+
+    osc.connect(filter).connect(gain).connect(audioCtx.destination);
+    osc.start(t0);
+    osc.stop(t0 + 0.07);
+  }
+
+  function playPop(){
+    if(!audioCtx) return;
+    const t0 = audioCtx.currentTime;
+
+    const osc = audioCtx.createOscillator();
+    osc.type = "sine";
+    osc.frequency.setValueAtTime(220, t0);
+    osc.frequency.exponentialRampToValueAtTime(520, t0 + 0.08);
+
+    const gain = audioCtx.createGain();
+    gain.gain.setValueAtTime(0.0001, t0);
+    gain.gain.exponentialRampToValueAtTime(0.22, t0 + 0.015);
+    gain.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.16);
+
+    const filter = audioCtx.createBiquadFilter();
+    filter.type = "highpass";
+    filter.frequency.setValueAtTime(180, t0);
+
+    osc.connect(filter).connect(gain).connect(audioCtx.destination);
+    osc.start(t0);
+    osc.stop(t0 + 0.18);
+  }
+
+  // ===== Música (cancion.mp3) =====
   async function fadeInMusic(){
     try{
       song.volume = 0;
@@ -556,35 +713,37 @@ Feliz Navidad. ✨`;
   let typing = false;
   let cancelTyping = false;
 
-  async function typeWrite(text){
-    typing = true;
-    cancelTyping = false;
-
-    // reset visuals
+  function resetScene(){
     typeTarget.textContent = "";
     signature.style.display = "none";
     cursor.style.display = "inline-block";
-    scrollArea.scrollTop = 0;
 
-    // open envelope (already open by default, just ensure state)
-    env.classList.remove("closing");
-    sealIcon.textContent = "✦";
-    letterCard.classList.remove("fadeOut");
     finalOverlay.classList.remove("show");
+
+    envStage.classList.remove("absorbLift");
+    env.classList.remove("closing");
+    seal.classList.remove("sealPop");
+    sealIcon.textContent = "✦";
+
+    letterCard.classList.remove("fadeOut", "slideUp");
+    paper.classList.remove("insertIntoSlot");
+    paper.scrollTop = 0;
+  }
+
+  async function typeWrite(text){
+    typing = true;
+    cancelTyping = false;
+    resetScene();
 
     for(let i=0;i<text.length;i++){
       if(cancelTyping) break;
 
       const ch = text[i];
-      const shouldStick = isNearBottom(scrollArea);
+      const stick = isNearBottom(paper);
 
       typeTarget.textContent += ch;
+      if(stick) paper.scrollTop = paper.scrollHeight;
 
-      if(shouldStick){
-        scrollArea.scrollTop = scrollArea.scrollHeight;
-      }
-
-      // slow, nostalgic pacing
       let ms = 60;
       if(ch === ",") ms = 170;
       if(ch === ".") ms = 250;
@@ -597,36 +756,51 @@ Feliz Navidad. ✨`;
 
     cursor.style.display = "none";
     typing = false;
-
     if(cancelTyping) return;
 
-    // show signature
-    await delay(500);
+    await delay(450);
     signature.style.display = "block";
-    scrollArea.scrollTop = scrollArea.scrollHeight;
+    paper.scrollTop = paper.scrollHeight;
 
-    // wait a bit, then close envelope + fade letter
     await delay(900);
-    await closeSequence();
+    await closeSequenceUltra();
   }
 
-  async function closeSequence(){
-    // 1) envelope closes
+  async function closeSequenceUltra(){
+    // 1) carta se acerca al sobre
+    letterCard.classList.add("slideUp");
+    await delay(160);
+
+    // 2) sobre sube levemente (absorbe) + whoosh suave
+    envStage.classList.add("absorbLift");
+    playWhoosh(0.55);
+    await delay(140);
+
+    // 3) papel entra por ranura (sube y desaparece) + whoosh cortito
+    paper.classList.add("insertIntoSlot");
+    playWhoosh(0.42);
+    await delay(680);
+
+    // 4) cierre solapa + click
     env.classList.add("closing");
     sealIcon.textContent = "❤";
+    playClick();
+    await delay(260);
 
-    // 2) letter fades out (slightly after envelope starts)
-    await delay(350);
+    // 5) pop del sello + pop
+    seal.classList.add("sealPop");
+    playPop();
+
+    // 6) esfumado carta + fade out música
+    await delay(420);
     letterCard.classList.add("fadeOut");
-
-    // 3) optional: fade out music with the goodbye
     fadeOutMusic();
 
-    // 4) show final overlay (happy ending)
+    // 7) final overlay
     await delay(900);
     finalOverlay.classList.add("show");
 
-    // sprinkle hearts a bit
+    // corazones suaves
     for(let i=0;i<12;i++){
       spawnHeart(innerWidth*0.5 + rand(-14,14), innerHeight*0.62 + rand(-12,12));
     }
@@ -644,6 +818,9 @@ Feliz Navidad. ✨`;
     lockScreen.classList.add("hidden");
     letterScreen.classList.remove("hidden");
 
+    // Activar WebAudio por gesto del usuario
+    ensureAudioCtx();
+
     fadeInMusic();
     typeWrite(letterText);
   }
@@ -653,6 +830,7 @@ Feliz Navidad. ✨`;
 
   // Music toggle
   musicBtn.addEventListener("click", async ()=> {
+    ensureAudioCtx();
     if(song.paused){
       await fadeInMusic();
     }else{
@@ -675,22 +853,21 @@ Feliz Navidad. ✨`;
 
   // Releer
   replayBtn.addEventListener("click", ()=> {
+    ensureAudioCtx();
     cancelTyping = true;
     setTimeout(()=>{
       cancelTyping = false;
+      fadeInMusic();
       typeWrite(letterText);
-    }, 60);
+    }, 80);
   });
 
   // Overlay controls
   closeOverlayBtn.addEventListener("click", ()=> finalOverlay.classList.remove("show"));
 
   restartAllBtn.addEventListener("click", ()=> {
+    ensureAudioCtx();
     finalOverlay.classList.remove("show");
-    // reset envelope open and letter visible, restart typing
-    env.classList.remove("closing");
-    sealIcon.textContent = "✦";
-    letterCard.classList.remove("fadeOut");
     cancelTyping = true;
     setTimeout(()=>{
       cancelTyping = false;
@@ -699,7 +876,7 @@ Feliz Navidad. ✨`;
     }, 120);
   });
 
-  // ===== Canvas FX: snow + hearts =====
+  // ===== FX: snow + hearts =====
   const canvas = document.getElementById("fx");
   const ctx = canvas.getContext("2d");
   function resize(){
@@ -740,7 +917,6 @@ Feliz Navidad. ✨`;
   function tick(t){
     ctx.clearRect(0,0,innerWidth,innerHeight);
 
-    // snow
     if(t-lastSnow > (lockScreen.classList.contains("hidden") ? 70 : 130)){
       spawnFlake();
       if(Math.random()<.35) spawnFlake();
@@ -758,7 +934,6 @@ Feliz Navidad. ✨`;
       if(f.y > innerHeight+10) flakes.splice(i,1);
     }
 
-    // hearts
     for(let i=hearts.length-1;i>=0;i--){
       const h=hearts[i];
       h.x += h.vx; h.y += h.vy; h.life -= 0.012;
@@ -771,6 +946,8 @@ Feliz Navidad. ✨`;
   requestAnimationFrame(tick);
 
   heartBtn.addEventListener("click", ()=> {
+    ensureAudioCtx();
+    playPop();
     for(let i=0;i<10;i++) spawnHeart(innerWidth-50+rand(-8,8), innerHeight-120+rand(-8,8));
   });
   document.addEventListener("click",(e)=>{
