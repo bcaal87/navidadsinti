@@ -1,765 +1,435 @@
 <!doctype html>
 <html lang="es">
 <head>
-  <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
-  <title>Cielo</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <title>—</title>
   <style>
     html,body{height:100%;margin:0}
-    body{background:#050508;overflow:hidden;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial}
+    body{
+      background:#050508;
+      overflow:hidden;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial;
+      color: rgba(255,255,255,.92);
+    }
     canvas{position:fixed; inset:0; width:100%; height:100%;}
+    #sky{z-index:0}
+    #fx{z-index:1}
 
     .veil{
-      position:fixed; inset:0; pointer-events:none; z-index:2;
-      background: radial-gradient(900px 650px at 50% 28%, rgba(255,255,255,.08), rgba(0,0,0,.82));
-      opacity:.92;
-      transition: background 6.5s ease, opacity 6.5s ease;
-    }
-    body.mode26 .veil{
-      background: radial-gradient(980px 720px at 50% 24%, rgba(255,255,255,.18), rgba(0,0,0,.64));
-      opacity:.78;
+      position:fixed; inset:0; z-index:2; pointer-events:none;
+      background:
+        radial-gradient(1100px 800px at 50% 24%, rgba(255,255,255,.10), rgba(0,0,0,.88)),
+        radial-gradient(900px 650px at 70% 30%, rgba(255,255,255,.06), rgba(0,0,0,0)),
+        radial-gradient(900px 650px at 30% 75%, rgba(255,255,255,.05), rgba(0,0,0,0));
+      opacity:.95;
     }
 
-    .overlay{
+    .wrap{
       position:fixed; inset:0; z-index:3;
       display:flex; align-items:center; justify-content:center;
       padding: 18px;
-      pointer-events:none;
-      opacity:0;
-      transform: translateY(10px);
-      transition: opacity 1.6s ease, transform 1.6s ease;
     }
-    body.showOverlay .overlay{opacity:1; transform: translateY(0);}
-
     .card{
-      width: min(620px, 100%);
-      border-radius: 22px;
+      width: min(680px, 100%);
+      border-radius: 26px;
       border: 1px solid rgba(255,255,255,.14);
       background: rgba(0,0,0,.22);
-      backdrop-filter: blur(10px);
-      -webkit-backdrop-filter: blur(10px);
-      box-shadow: 0 26px 120px rgba(0,0,0,.74);
-      padding: 14px 14px 12px;
-      color: rgba(255,255,255,.92);
-      pointer-events:auto;
-      opacity: 1;
-      transform: translateY(0);
-      transition: opacity 2.6s ease, transform 2.6s ease, filter 3.4s ease;
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      box-shadow: 0 30px 150px rgba(0,0,0,.82);
+      padding: 18px 16px 14px;
     }
-    body.mode26 .card{ filter: brightness(1.03); }
-    body.fadeCard .card{ opacity:0; transform: translateY(14px); }
 
-    .kicker{
-      font-size:12px;
-      letter-spacing:.22px;
-      text-transform: uppercase;
-      font-weight:900;
-      color: rgba(255,255,255,.72);
-      margin-bottom:8px;
+    .top{
+      display:flex; align-items:center; justify-content:space-between; gap:10px;
       user-select:none;
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:10px;
+      margin-bottom: 10px;
     }
-    .kicker .pill{
-      padding:7px 10px;
-      border-radius:999px;
-      border:1px solid rgba(255,255,255,.14);
-      background: rgba(255,255,255,.06);
-      color: rgba(255,255,255,.82);
-      font-weight:900;
-      letter-spacing:.2px;
-      user-select:none;
-      transition: background 6.5s ease, border-color 6.5s ease;
-    }
-    body.mode26 .kicker .pill{
-      background: rgba(255,255,255,.08);
-      border-color: rgba(255,255,255,.18);
-    }
-
-    .msgWrap{
-      border-radius:18px;
-      border:1px solid rgba(255,255,255,.10);
-      background: rgba(0,0,0,.18);
-      padding: 12px 12px;
-      min-height: 230px;
-      max-height: 56vh;
-      overflow:auto;
-      -webkit-overflow-scrolling: touch;
-      transition: border-color 6.5s ease, background 6.5s ease;
-    }
-    body.mode26 .msgWrap{
-      border-color: rgba(255,255,255,.14);
-      background: rgba(0,0,0,.16);
-    }
-
-    .msg{
-      margin:0;
-      color: rgba(255,255,255,.92);
-      font-size: 15.7px;
-      line-height: 1.86;
-      letter-spacing:.15px;
-      text-shadow: 0 6px 22px rgba(0,0,0,.60);
-      white-space: pre-wrap;
-    }
-
-    .controls{
-      display:flex;
-      gap:10px;
-      flex-wrap:wrap;
-      margin-top:10px;
-      justify-content:space-between;
-      align-items:center;
-      transition: opacity .6s ease, transform .6s ease;
-    }
-    .btn{
-      border-radius:16px;
-      border:1px solid rgba(255,255,255,.18);
-      background: rgba(255,255,255,.10);
-      color: rgba(255,255,255,.92);
-      padding: 12px 12px;
-      font-weight:900;
-      letter-spacing:.2px;
-      cursor:pointer;
-      user-select:none;
-      display:inline-flex;
-      align-items:center;
-      gap:10px;
-      flex: 1 1 auto;
-      justify-content:center;
-      min-width: 140px;
-      transition: background .35s ease, transform .08s ease, opacity .35s ease;
-    }
-    .btn:hover{ background: rgba(255,255,255,.12); }
-    .btn:active{transform: scale(.99)}
-    .btn small{opacity:.75; font-weight:850}
-
-    /* ✅ during finale: hide buttons */
-    body.showFinale .controls{
-      opacity:0;
-      transform: translateY(10px);
-      pointer-events:none;
-    }
-    /* ✅ after finale: show them again */
-    body.showControls .controls{
-      opacity:1;
-      transform: translateY(0);
-      pointer-events:auto;
-    }
-
-    .stampRow{
-      display:flex;
-      justify-content:space-between;
-      align-items:flex-end;
-      gap:10px;
-      margin-top:10px;
-      color: rgba(255,255,255,.66);
-      font-size: 12.2px;
-      user-select:none;
-    }
-
-    .yearFade{
-      position:fixed; inset:0; z-index:4; pointer-events:none;
-      opacity:0;
-      transition: opacity 6.8s ease;
-      background: radial-gradient(900px 700px at 50% 30%, rgba(255,255,255,.12), rgba(0,0,0,.88));
-    }
-    body.yearFading .yearFade{ opacity:1; }
-
-    .yearMark{
-      position:fixed; inset:0; z-index:5; pointer-events:none;
-      display:flex; align-items:center; justify-content:center;
-      opacity:0;
-      transform: translateY(10px) scale(.98);
-      transition: opacity 6.8s ease, transform 6.8s ease;
-      padding: 18px;
-    }
-    body.yearFading .yearMark{
-      opacity:1;
-      transform: translateY(0) scale(1);
-    }
-    .yearMark .big{
-      font-size: clamp(56px, 16vw, 90px);
-      letter-spacing: 2px;
-      font-weight: 950;
-      color: rgba(255,255,255,.72);
-      text-shadow: 0 20px 90px rgba(0,0,0,.80);
-      user-select:none;
-    }
-    .yearMark .sub{
-      margin-top: 10px;
-      text-align:center;
-      font-size: 13px;
-      line-height: 1.5;
-      color: rgba(255,255,255,.68);
-      user-select:none;
-    }
-
-    .finale{
-      position:fixed; inset:0; z-index:6; pointer-events:none;
-      display:flex; align-items:center; justify-content:center;
-      opacity:0;
-      transform: translateY(14px) scale(.98);
-      transition: opacity 2.2s ease, transform 2.2s ease;
-      padding: 18px;
-    }
-    body.showFinale .finale{
-      opacity:1;
-      transform: translateY(0) scale(1);
-    }
-    /* ✅ allow finale to gently fade out later if desired */
-    body.hideFinale .finale{
-      opacity:0;
-      transform: translateY(12px) scale(.99);
-    }
-    .finale .wrap{ text-align:center; width:min(620px,100%); }
-    .finale .glow{
-      display:inline-block;
-      padding: 18px 18px;
-      border-radius: 26px;
-      border: 1px solid rgba(255,255,255,.18);
-      background: rgba(0,0,0,.22);
-      backdrop-filter: blur(10px);
-      -webkit-backdrop-filter: blur(10px);
-      box-shadow: 0 30px 150px rgba(0,0,0,.78);
-    }
-    .finale .title{
-      font-size: clamp(34px, 9vw, 54px);
-      font-weight: 950;
-      letter-spacing: .6px;
-      color: rgba(255,255,255,.92);
-      text-shadow: 0 18px 90px rgba(0,0,0,.78);
-      margin: 0;
-    }
-    .finale .subt{
-      margin-top: 10px;
-      font-size: 13.2px;
-      line-height: 1.55;
-      color: rgba(255,255,255,.72);
-    }
-
-    .modalWrap{
-      position:fixed; inset:0;
-      display:flex; align-items:center; justify-content:center;
-      padding: 18px;
-      z-index:10;
-      background: rgba(0,0,0,.62);
-      backdrop-filter: blur(10px);
-      -webkit-backdrop-filter: blur(10px);
-    }
-    .modal{
-      width:min(620px, 100%);
-      border-radius:22px;
-      border:1px solid rgba(255,255,255,.16);
-      background: linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.03));
-      box-shadow: 0 30px 140px rgba(0,0,0,.76);
-      padding: 16px 14px 14px;
-      color: rgba(255,255,255,.90);
-      transform-origin:center;
-    }
-    .rowTop{
-      display:flex; align-items:center; justify-content:space-between; gap:12px;
-      margin-bottom:10px; user-select:none;
-    }
-    .tag{
+    .badge{
       display:inline-flex; align-items:center; gap:10px;
-      padding:10px 12px;
-      border-radius:999px;
-      border:1px solid rgba(255,255,255,.16);
-      background: rgba(0,0,0,.18);
-      font-weight:800; letter-spacing:.2px; font-size:12px; color: rgba(255,255,255,.86);
+      padding: 8px 12px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,.14);
+      background: rgba(255,255,255,.06);
+      font-size: 12px;
+      letter-spacing:.22px;
+      font-weight: 900;
+      text-transform: uppercase;
+      color: rgba(255,255,255,.78);
     }
     .dot{
       width:9px; height:9px; border-radius:999px;
-      background: rgba(255,255,255,.88);
-      box-shadow: 0 0 14px rgba(255,255,255,.22);
+      background: rgba(255,255,255,.90);
+      box-shadow: 0 0 18px rgba(255,255,255,.22);
       opacity:.9;
     }
-    .chip{
-      padding:7px 10px; border-radius:999px;
-      border:1px solid rgba(255,255,255,.14);
-      background: rgba(0,0,0,.18);
-      color: rgba(255,255,255,.76);
-      font-weight:900; letter-spacing:.2px; font-size:12px;
-    }
-    h1{margin:6px 0 8px;font-size:18px;letter-spacing:.15px;line-height:1.2;color:rgba(255,255,255,.92)}
-    p{margin:0 0 12px;color:rgba(255,255,255,.74);line-height:1.5;font-size:13.5px}
 
-    .hintBox{
-      margin: 0 0 12px;
-      padding: 12px 12px;
-      border-radius:16px;
-      border:1px dashed rgba(255,255,255,.18);
-      background: rgba(0,0,0,.18);
-      color: rgba(255,255,255,.78);
-      font-size: 12.8px;
-      line-height:1.48;
+    .actions{
+      display:flex; gap:8px; flex-wrap:wrap; justify-content:flex-end;
     }
-    .hintTitle{font-weight:900;letter-spacing:.2px;color:rgba(255,255,255,.90);margin-bottom:6px}
-    .hintLine{margin-top:8px}
 
-    .inputRow{display:flex; gap:10px; align-items:center}
-    input{
-      flex:1;
-      border-radius:16px;
-      border:1px solid rgba(255,255,255,.18);
-      background: rgba(0,0,0,.22);
+    .btn{
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,.14);
+      background: rgba(255,255,255,.08);
+      color: rgba(255,255,255,.90);
+      padding: 9px 12px;
+      font-weight: 900;
+      letter-spacing:.2px;
+      cursor:pointer;
+      display:inline-flex; align-items:center; gap:8px;
+      transition: transform .08s ease, background .35s ease, opacity .35s ease;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .btn:hover{ background: rgba(255,255,255,.10); }
+    .btn:active{ transform: scale(.99); }
+
+    .title{
+      margin: 4px 0 10px;
+      font-size: clamp(18px, 5vw, 22px);
+      font-weight: 950;
+      letter-spacing:.2px;
       color: rgba(255,255,255,.92);
-      padding: 12px 12px;
-      font-size:14px;
-      outline:none;
+      text-shadow: 0 18px 90px rgba(0,0,0,.82);
     }
-    input::placeholder{ color: rgba(255,255,255,.45); }
-    button{
-      border-radius:16px;
+
+    .box{
+      border-radius: 18px;
+      border: 1px solid rgba(255,255,255,.10);
+      background: rgba(0,0,0,.18);
+      padding: 14px 12px;
+      min-height: 210px;
+    }
+
+    .text{
+      margin:0;
+      font-size: 15.8px;
+      line-height: 1.95;
+      letter-spacing:.15px;
+      color: rgba(255,255,255,.90);
+      text-shadow: 0 8px 30px rgba(0,0,0,.72);
+      white-space: pre-wrap;
+      min-height: 140px;
+    }
+
+    .foot{
+      margin-top: 10px;
+      display:flex; justify-content:space-between; gap:10px;
+      font-size: 12px;
+      color: rgba(255,255,255,.55);
+      user-select:none;
+    }
+
+    /* Floating hearts (DOM) */
+    .hearts{
+      position:fixed; inset:0; z-index:5; pointer-events:none;
+      overflow:hidden;
+    }
+    .heart{
+      position:absolute;
+      left: var(--x);
+      bottom: -30px;
+      font-size: var(--s);
+      opacity: 0;
+      transform: translate(-50%, 0) scale(1);
+      filter: drop-shadow(0 12px 40px rgba(0,0,0,.65));
+      animation: floatUp var(--t) ease-in forwards;
+      will-change: transform, opacity;
+      user-select:none;
+    }
+    @keyframes floatUp{
+      0%{opacity:0; transform: translate(-50%, 0) scale(.9)}
+      10%{opacity:.9}
+      70%{opacity:.85}
+      100%{
+        opacity:0;
+        transform: translate(calc(-50% + var(--drift)), calc(-1 * var(--h))) rotate(var(--rot)) scale(1.12);
+      }
+    }
+
+    /* Audio unlock */
+    .unlock{
+      position:fixed; inset:0; z-index:10;
+      display:none;
+      align-items:center; justify-content:center;
+      padding: 18px;
+      background: rgba(0,0,0,.68);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+    }
+    .unlock.show{display:flex}
+    .unlockCard{
+      width: min(520px, 100%);
+      border-radius: 26px;
+      border:1px solid rgba(255,255,255,.16);
+      background: rgba(0,0,0,.26);
+      box-shadow: 0 30px 150px rgba(0,0,0,.86);
+      padding: 16px 14px;
+      text-align:center;
+    }
+    .unlockTitle{
+      margin:0 0 8px;
+      font-weight: 950;
+      letter-spacing:.2px;
+      font-size: 18px;
+    }
+    .unlockP{
+      margin:0 0 12px;
+      color: rgba(255,255,255,.72);
+      font-size: 13.5px;
+      line-height: 1.55;
+    }
+    .unlockBtn{
+      width:100%;
+      border-radius: 18px;
       border:1px solid rgba(255,255,255,.18);
       background: rgba(255,255,255,.10);
       color: rgba(255,255,255,.92);
       padding: 12px 14px;
-      font-weight:850;
+      font-weight: 950;
       letter-spacing:.2px;
       cursor:pointer;
-      user-select:none;
     }
-    button:active{transform: scale(.99)}
-    .error{margin-top:10px;color:rgba(255,170,170,.92);font-size:12.5px;display:none}
-    .error.show{display:block}
-    @keyframes shake{
-      0%,100%{transform:translateX(0)}
-      20%{transform:translateX(-6px)}
-      40%{transform:translateX(6px)}
-      60%{transform:translateX(-4px)}
-      80%{transform:translateX(4px)}
-    }
-    .shake{animation:shake .35s ease}
+    .unlockBtn:active{ transform: scale(.99); }
   </style>
 </head>
 <body>
-
-  <canvas id="bg"></canvas>
+  <canvas id="sky"></canvas>
   <canvas id="fx"></canvas>
   <div class="veil"></div>
+  <div class="hearts" id="hearts"></div>
 
-  <div class="yearFade"></div>
-  <div class="yearMark" id="yearMark">
-    <div style="text-align:center">
-      <div class="big" id="yearBig">2026</div>
-      <div class="sub" id="yearSub">Que lo nuevo llegue suave… y se quede bonito.</div>
-    </div>
-  </div>
-
-  <div class="finale" id="finale">
-    <div class="wrap">
-      <div class="glow">
-        <h2 class="title">Te Amo! <br>MORENITA</h2>
-        <div class="subt">Y si el destino vuelve a cruzarnos… que sea con calma y listos para casarnos</div>
-      </div>
-    </div>
-  </div>
-
-  <div class="overlay" id="overlay">
-    <div class="card" id="card">
-      <div class="kicker">
-        <span id="kickerText">2025</span>
-        <span class="pill" id="pillText">Agradezco lo vivido</span>
-      </div>
-
-      <div class="msgWrap" id="msgWrap">
-        <p class="msg" id="msg"></p>
-      </div>
-
-      <div class="controls" id="controls">
-        <button class="btn" id="back2025" type="button">⟵ <small>Volver 2025</small></button>
-        <button class="btn" id="go2026" type="button">➜ <small>Ir a 2026</small></button>
-        <button class="btn" id="replay" type="button">↺ <small>Repetir</small></button>
-        <button class="btn" id="hearts" type="button">❤ <small>Corazones</small></button>
-        <button class="btn" id="snow" type="button">❄ <small>Copitos</small></button>
-      </div>
-
-      <div class="stampRow">
-        <div><b id="yearLabel">2025</b></div>
-        <div id="stamp"></div>
-      </div>
-    </div>
-  </div>
-
-  <div class="modalWrap" id="modalWrap" role="dialog" aria-modal="true">
-    <div class="modal" id="modal">
-      <div class="rowTop">
-        <div class="tag"><span class="dot"></span>Acceso</div>
-        <div class="chip" id="triesChip">Intentos: 0</div>
-      </div>
-
-      <h1>Escribe la palabra exacta</h1>
-      <p>Sin comillas. (No importa mayúsculas ni puntos.)</p>
-
-      <div class="hintBox">
-        <div class="hintTitle">Pista</div>
-        <div class="hintLine">
-          La canción que te dedicaron durante el regreso a la playa tiquisate.
-          El autor es Benni Ibarra y la canción dice algo así <b>........en tu mirada</b>.... <b>cada madrugada.</b>.
+  <div class="wrap">
+    <div class="card">
+      <div class="top">
+        <div class="badge"><span class="dot"></span>—</div>
+        <div class="actions">
+          <button class="btn" id="love">♥ Corazones</button>
+          <button class="btn" id="replay">↺ Releer</button>
         </div>
       </div>
 
-      <div class="inputRow">
-        <input id="key" type="text" autocomplete="off" autocapitalize="none" placeholder="Escribe aquí…"/>
-        <button id="enter" type="button">Entrar</button>
+      <div class="title">Te amo</div>
+
+      <div class="box">
+        <p class="text" id="text"></p>
       </div>
 
-      <div class="error" id="err">No coincide. Respira… y prueba otra vez.</div>
+      <div class="foot">
+        <div id="stamp"></div>
+        <div id="clock"></div>
+      </div>
     </div>
   </div>
 
-  <audio id="music" preload="auto" loop playsinline>
-    <source src="cancion.mp3" type="audio/mpeg">
+  <audio id="music" autoplay loop playsinline preload="auto">
+    <source src="musica.mp3" type="audio/mpeg">
   </audio>
 
+  <div class="unlock" id="unlock">
+    <div class="unlockCard">
+      <div class="unlockTitle">Toca una vez</div>
+      <div class="unlockP">Para escuchar la melodía.</div>
+      <button class="unlockBtn" id="unlockBtn">Escuchar</button>
+    </div>
+  </div>
+
   <script>
-    const ANSWER = "cielo";
+    // ===== Texto (tuyo + un poco más, sin exagerar) =====
+    const full =
+`Te amo… y aunque el tiempo pase,
+no encuentro una forma honesta de dejar de hacerlo.
 
-    const TEXT_2025 =
-`Agradezco lo vivido, 2025.
+A veces me descubro deseando algo tan simple
+como volver a verte,
+abrazarte sin decir nada
+y quedarme ahí, como si el mundo pudiera detenerse un momento.
 
-No te voy a llamar “año duro”.
-Porque incluso lo difícil —cuando uno ama de verdad—
-se vuelve parte de su fe.
+Hay días en los que todo me recuerda a ti:
+tu voz,
+tus gestos,
+la paz que tenía la vida cuando estabas.
+Ahora todo se siente más lento… más vacío.
 
-Hubo días en los que me sobraba fuerza…
-y otros en los que me quedé sin voz,
-como si el pecho se me apagara de golpe,
-y aun así… seguí.
+Tu ausencia duele.
+Duele en silencio.
+Pero aun así, te agradezco.
+Porque fuiste un amor bonito,
+de esos que no se olvidan,
+de los que se quedan a vivir en el alma aunque ya no estén.
 
-Seguí por una razón pequeña pero firme:
-si lo que siento es real, vale la pena.
-Aunque no me aplaudan.
-Aunque nadie lo note.
-Aunque el mundo siga igual.
+No te voy a mentir:
+hay un vacío enorme en mi corazón.
+Extraño saber de ti,
+extraño leerte.
+Y aunque comprendo tu silencio,
+solo espero que estés bien.
+Si algún día necesitas ser escuchada,
+o simplemente leída…
+aquí sigo, sin irme del todo.
 
-Este año me enseñó que darlo todo no es perder.
-Es una forma de ser.
-Es mirarse al espejo y saber
-que uno entrega el corazón cuando ama.
+A veces me encierro en mi habitación
+y miro nuestras fotos.
+Ahí todavía te encuentro,
+en cada detalle,
+en cada recuerdo que se niega a desaparecer.
 
-Y también me enseñó algo importante:
-tú fuiste una gran persona.
-Un gran amor bonito, MORENITA.
-De esos que llegan y cambian la vida,
-aunque no se queden para siempre.
+Perdóname por amarte tanto
+y no saber soltarte.
+Creo en el amor…
+y tal vez por eso no logro dejarte ir, Analú.
+Han sido días difíciles,
+días en los que solo he querido escucharte,
+aunque sea una vez más.
 
-Hubo momentos que todavía me acompañan:
-una mirada que calmaba,
-una risa que abría el día,
-una manera de existir
-que hacía que el mundo pesara menos.
+No sé cómo seguir…
+solo sé que me duele.
+Tengo el corazón roto, mi Analú.
 
-Si algo dolió, no lo digo para culpar.
-Lo digo porque fue real.
-Porque a veces dos personas buenas
-también se pierden en el camino,
-y eso no convierte a nadie en malo.
+…
+Te amo.`;
 
-Yo me quedo con lo mejor:
-con lo que aprendí de ti,
-con lo que me despertaste,
-con lo que me hiciste creer otra vez.
-
-Me perdono por las culpas que me inventé,
-por las preguntas que me hice en secreto,
-por creer que si yo me esforzaba un poco más
-todo se iba a salvar.
-
-Hoy entiendo algo:
-no todo lo que amamos se queda,
-pero todo lo que amamos de verdad
-nos cambia para siempre.
-
-Así que no cierro con rencor.
-Cierro con gratitud.
-Porque lo bonito no merece guerra.
-Merece un “gracias”
-
-Contigo aprendi, que el amor es acción.
-y que el orgullo solo aleja.
-También aprendí,
-que hay historias que no se terminan:
-solo se transforman.
-
-Si la vida decide volver…
-que nos encuentre mejor.
-Más humanos.
-Más valientes.
-Con menos miedo.
-Y con la misma luz… pero más calma.
-
-Gracias, 2025.
-Me voy con el corazón cansado,
-sí…
-pero agradecido.
-Y eso también es victoria.`;
-
-    const TEXT_2026 =
-`2026, te recibo suave.
-
-No vengo a pedir milagros grandes.
-Vengo a pedir paz en lo cotidiano:
-una mañana ligera,
-un mensaje sincero,
-un abrazo que no sea a medias,
-un beso tan profundo que se quede en el alma.
-
-Que este año me enseñe:
-A cuidar mi corazón sin endurecerlo.
-A seguirte amando de manera bonita.
-Y a celebrar lo simple como si fuera sagrado,
-cada logro o triunfo pequeño.
-
-Que lo bonito llegue sin que yo lo ruegue,
-y que yo sea lo suficientemente valiente
-para no huir cuando algo bueno se quede.
-
-Que haya salud.
-Que haya trabajo con propósito.
-Que haya días de risa real.
-Y momentos que se queden en el alma
-por lo suaves que fueron.
-
-Si el amor vuelve,
-que sea claro.
-Que sea recíproco.
-Y si no vuelve,
-que yo igual aprenda a estar bien.
-
-2026:
-que me encuentre presente.
-Que me encuentre agradecido.
-Que me encuentre listo
-para lo bonito, sin miedo.
-
-Bienvenido.
-Hazlo bonito.
-Y si puedes…
-hazlo eterno en los detalles (aunque sean minimos),
-no importa si es algo tan simple, como una carta o 
-un mensaje de buenos días.`;
-
-    const modalWrap = document.getElementById("modalWrap");
-    const modal = document.getElementById("modal");
-    const key = document.getElementById("key");
-    const enter = document.getElementById("enter");
-    const err = document.getElementById("err");
-    const triesChip = document.getElementById("triesChip");
-
-    const msgEl = document.getElementById("msg");
-    const msgWrap = document.getElementById("msgWrap");
-    const replayBtn = document.getElementById("replay");
-    const back2025Btn = document.getElementById("back2025");
-    const go2026Btn = document.getElementById("go2026");
-    const heartsBtn = document.getElementById("hearts");
-    const snowBtn = document.getElementById("snow");
-
-    const kickerText = document.getElementById("kickerText");
-    const pillText = document.getElementById("pillText");
-    const yearLabel = document.getElementById("yearLabel");
-
-    const yearBig = document.getElementById("yearBig");
-    const yearSub = document.getElementById("yearSub");
-
-    const music = document.getElementById("music");
-    music.volume = 0.85;
-
+    // ===== Fecha y hora =====
     document.getElementById("stamp").textContent =
       new Date().toLocaleDateString("es-GT",{weekday:"long",year:"numeric",month:"long",day:"numeric"});
+    const pad = n => String(n).padStart(2,"0");
+    const d = new Date();
+    document.getElementById("clock").textContent = `${pad(d.getHours())}:${pad(d.getMinutes())}`;
 
-    function norm(s){
-      return (s || "")
-        .trim().toLowerCase()
-        .replace(/[^\p{L}\p{N}\s]/gu, "")
-        .replace(/\s+/g, " ");
-    }
+    // ===== Typewriter lento =====
+    const textEl = document.getElementById("text");
+    const replay = document.getElementById("replay");
+    let tmr = null;
 
-    // Typing engine
-    let typingTimer = null;
-    let currentText = "";
-    let typed = "";
-    let idx = 0;
-    let mode = "2025";
-    let onComplete = null;
+    function stop(){ if(tmr) clearTimeout(tmr); tmr=null; }
 
-    const SPEED_2025 = 84;
-    const SPEED_2026 = 62;
+    function typeSlow(){
+      stop();
+      textEl.textContent = "";
+      let i = 0;
+      const base = 58;
 
-    function stopTyping(){
-      if(typingTimer) clearTimeout(typingTimer);
-      typingTimer = null;
-    }
+      function tick(){
+        const ch = full[i];
+        if(ch === undefined) return;
+        textEl.textContent += ch;
+        i++;
 
-    function setMode(m){
-      mode = m;
-      // reset UI states
-      document.body.classList.remove("showFinale","fadeCard","hideFinale","showControls");
-      if(mode === "2025"){
-        document.body.classList.remove("mode26");
-        kickerText.textContent = "2025";
-        pillText.textContent = "Agradezco lo vivido";
-        yearLabel.textContent = "2025";
-        currentText = TEXT_2025;
-      } else {
-        document.body.classList.add("mode26");
-        kickerText.textContent = "2026";
-        pillText.textContent = "Bienvenido lo bonito";
-        yearLabel.textContent = "2026";
-        currentText = TEXT_2026;
+        let delay = base;
+        if(ch === "\n") delay = base * 9;
+        if(".,;:".includes(ch)) delay = base * 3.0;
+        if("!?".includes(ch)) delay = base * 4.2;
+        if(ch === "…") delay = base * 7.0;
+
+        tmr = setTimeout(tick, delay);
       }
-      softSwitchFlakes();
-      msgWrap.scrollTop = 0;
-    }
-
-    function startTyping(doneCb){
-      stopTyping();
-      onComplete = typeof doneCb === "function" ? doneCb : null;
-      typed = "";
-      idx = 0;
-      msgEl.textContent = "";
-      msgWrap.scrollTop = 0;
       tick();
     }
 
-    function tick(){
-      const ch = currentText[idx];
-      if(ch === undefined){
-        const cb = onComplete;
-        onComplete = null;
-        if(cb) cb();
-        return;
+    replay.addEventListener("click", typeSlow);
+    typeSlow();
+
+    // ===== Música: autoplay + fade-in + unlock si bloquea =====
+    const music = document.getElementById("music");
+    const unlock = document.getElementById("unlock");
+    const unlockBtn = document.getElementById("unlockBtn");
+    music.volume = 0;
+
+    let raf = null;
+    function fadeTo(target=0.70, ms=1700){
+      target = Math.max(0, Math.min(1, target));
+      if(raf) cancelAnimationFrame(raf);
+      const start = music.volume;
+      const t0 = performance.now();
+      const step = (t)=>{
+        const p = Math.min(1, (t - t0)/ms);
+        const eased = 1 - Math.pow(1-p, 3);
+        music.volume = start + (target - start) * eased;
+        if(p < 1) raf = requestAnimationFrame(step);
+      };
+      raf = requestAnimationFrame(step);
+    }
+
+    async function tryPlay(){
+      try{
+        await music.play();
+        fadeTo(0.70, 1700);
+        unlock.classList.remove("show");
+      }catch(e){
+        unlock.classList.add("show");
       }
+    }
+    unlockBtn.addEventListener("click", tryPlay);
+    tryPlay();
 
-      typed += ch;
-      msgEl.textContent = typed;
-      idx++;
+    const unlockOnTouch = async ()=>{
+      if(unlock.classList.contains("show")) await tryPlay();
+      window.removeEventListener("pointerdown", unlockOnTouch);
+      window.removeEventListener("touchstart", unlockOnTouch);
+      window.removeEventListener("click", unlockOnTouch);
+    };
+    window.addEventListener("pointerdown", unlockOnTouch, {passive:true});
+    window.addEventListener("touchstart", unlockOnTouch, {passive:true});
+    window.addEventListener("click", unlockOnTouch, {passive:true});
 
-      const base = (mode === "2025") ? SPEED_2025 : SPEED_2026;
-      let delay = base;
-      if(ch === "\n") delay = base * 7.4;
-      if(".,;:".includes(ch)) delay = base * 3.3;
-      if("!?".includes(ch)) delay = base * 4.4;
-      if(ch === "…") delay = base * 7.2;
+    // ===== Corazones =====
+    const heartsLayer = document.getElementById("hearts");
+    const loveBtn = document.getElementById("love");
 
-      msgWrap.scrollTop = msgWrap.scrollHeight;
-      typingTimer = setTimeout(tick, delay);
+    function spawnHeart(x = Math.random()*innerWidth){
+      const el = document.createElement("div");
+      el.className = "heart";
+      el.textContent = "❤";
+      const size = (16 + Math.random()*18).toFixed(0) + "px";
+      const dur  = (2400 + Math.random()*2200).toFixed(0) + "ms";
+      const drift = ((-60 + Math.random()*120).toFixed(0)) + "px";
+      const height = (innerHeight*(0.55 + Math.random()*0.35)).toFixed(0) + "px";
+      const rot = ((-18 + Math.random()*36).toFixed(0)) + "deg";
+
+      el.style.setProperty("--x", x + "px");
+      el.style.setProperty("--s", size);
+      el.style.setProperty("--t", dur);
+      el.style.setProperty("--drift", drift);
+      el.style.setProperty("--h", height);
+      el.style.setProperty("--rot", rot);
+
+      heartsLayer.appendChild(el);
+      // remove when animation ends
+      el.addEventListener("animationend", ()=> el.remove());
     }
 
-    replayBtn.addEventListener("click", ()=> startTyping());
-    back2025Btn.addEventListener("click", ()=>{
-      cancelAutoTransition();
-      setMode("2025");
-      startTyping(()=> scheduleAutoTransitionAfter2025());
-    });
-    go2026Btn.addEventListener("click", ()=> transitionTo2026(true));
-
-    // Transition control
-    let transitionLock = false;
-    let autoTransitionArmed = false;
-
-    function cancelAutoTransition(){ autoTransitionArmed = false; }
-    function scheduleAutoTransitionAfter2025(){ autoTransitionArmed = true; }
-
-    function transitionTo2026(fromUser){
-      if(transitionLock) return;
-      if(mode === "2026"){
-        document.body.classList.remove("showFinale","fadeCard","hideFinale","showControls");
-        startTyping(()=> onFinish2026());
-        return;
+    function burstHearts(count=18){
+      for(let i=0;i<count;i++){
+        setTimeout(()=> spawnHeart(innerWidth*(0.25 + Math.random()*0.5)), i*55);
       }
-      if(!fromUser && !autoTransitionArmed) return;
-
-      transitionLock = true;
-      autoTransitionArmed = false;
-      stopTyping();
-
-      yearBig.textContent = "2026";
-      yearSub.textContent = "Que lo nuevo llegue suave… y se quede bonito.";
-      document.body.classList.add("yearFading");
-
-      setTimeout(()=>{
-        setMode("2026");
-        startTyping(()=> onFinish2026());
-      }, 5200);
-
-      setTimeout(()=>{
-        document.body.classList.remove("yearFading");
-        transitionLock = false;
-      }, 9300);
     }
 
-    // ✅ Finale flow:
-    // 1) fade card (text)  2) show "Te Amo!"  3) after a while, show buttons again
-    function onFinish2026(){
-      setTimeout(()=>{
-        document.body.classList.add("fadeCard");
+    loveBtn.addEventListener("click", ()=> burstHearts(22));
+    // tap anywhere (nice on mobile)
+    window.addEventListener("pointerdown", (e)=>{
+      // avoid spawning when tapping buttons
+      const t = e.target;
+      if(t && (t.id === "love" || t.id === "replay" || t.id === "unlockBtn")) return;
+      spawnHeart(e.clientX);
+    }, {passive:true});
 
-        setTimeout(()=>{
-          document.body.classList.add("showFinale");
-          burst("heart", 2);
-          setTimeout(()=> burst("snow", 1), 650);
+    // ===== Canvas: cielo + estrellas + neblina + hojas =====
+    const skyC = document.getElementById("sky");
+    const fxC  = document.getElementById("fx");
+    const sky  = skyC.getContext("2d");
+    const fx   = fxC.getContext("2d");
 
-          // ✅ after finale, bring back controls
-          setTimeout(()=>{
-            document.body.classList.add("showControls"); // shows buttons
-            // optional: you can also fade the finale slightly so the UI is readable
-            document.body.classList.add("hideFinale");
-          }, 4500);
+    let W=0,H=0,DPR=1;
+    let stars = [];
+    let leaves = [];
+    let mist = [];
 
-        }, 1200);
-
-      }, 1600);
-    }
-
-    async function startExperience(){
-      modalWrap.style.display = "none";
-      document.body.classList.add("showOverlay");
-
-      setMode("2025");
-      scheduleAutoTransitionAfter2025();
-      startTyping(()=>{
-        setTimeout(()=> transitionTo2026(false), 2600);
-      });
-
-      startAnimations();
-
-      try { await music.play(); } catch(e){}
-    }
-
-    // Access
-    let tries = 0;
-    function wrong(){
-      err.classList.add("show");
-      tries++;
-      triesChip.textContent = `Intentos: ${tries}`;
-      modal.classList.remove("shake"); void modal.offsetWidth; modal.classList.add("shake");
-      key.focus(); key.select();
-    }
-    function tryEnter(){
-      err.classList.remove("show");
-      const guess = norm(key.value);
-      const target = norm(ANSWER);
-      if(guess === target || guess.includes(target)) startExperience();
-      else wrong();
-    }
-    enter.addEventListener("click", tryEnter);
-    key.addEventListener("keydown", (e)=>{ if(e.key === "Enter") tryEnter(); });
-
-    // Canvas FX
-    const bgC = document.getElementById("bg");
-    const fxC = document.getElementById("fx");
-    const bg = bgC.getContext("2d");
-    const ctx = fxC.getContext("2d");
-
-    let W,H,DPR;
     function resize(){
       DPR = Math.max(1, Math.min(2, devicePixelRatio || 1));
       W = innerWidth; H = innerHeight;
-      for(const c of [bgC, fxC]){
+
+      for(const c of [skyC, fxC]){
         c.width = Math.floor(W*DPR);
         c.height = Math.floor(H*DPR);
         c.style.width = W+"px";
@@ -767,168 +437,152 @@ un mensaje de buenos días.`;
         const g = c.getContext("2d");
         g.setTransform(DPR,0,0,DPR,0,0);
       }
-      drawBG(0);
-      init();
+
+      initStars();
+      initMist();
+      initLeaves();
+      drawSky(0);
     }
     addEventListener("resize", resize);
 
-    let flakes = [];
-    let bursts = [];
-    let started = false;
-    let t0 = 0;
-
-    function init(){
-      flakes = [];
-      bursts = [];
-      const n = Math.floor((W*H)/12000);
-      for(let i=0;i<n;i++) flakes.push(makeFlake(true));
+    function initStars(){
+      stars = [];
+      const n = Math.floor((W*H)/8500);
+      for(let i=0;i<n;i++){
+        stars.push({
+          x: Math.random()*W,
+          y: Math.random()*H,
+          r: 0.6 + Math.random()*1.7,
+          a: 0.05 + Math.random()*0.20,
+          tw: 0.6 + Math.random()*1.7,
+          ph: Math.random()*1000
+        });
+      }
     }
 
-    function makeFlake(randomY){
-      const isLeaf = (mode === "2025");
-      const size = isLeaf ? (2.2 + Math.random()*5.8) : (1.6 + Math.random()*3.2);
-      return {
-        kind: isLeaf ? "leaf" : "snow",
+    function initMist(){
+      mist = [];
+      const n = 10;
+      for(let i=0;i<n;i++){
+        mist.push({
+          x: Math.random()*W,
+          y: Math.random()*H,
+          r: 160 + Math.random()*260,
+          a: 0.03 + Math.random()*0.05,
+          vx: (-6 + Math.random()*12),
+          vy: (-4 + Math.random()*8)
+        });
+      }
+    }
+
+    function makeLeaf(randomY){
+      const r = 2.0 + Math.random()*6.4;
+      return{
         x: Math.random()*W,
-        y: randomY ? Math.random()*H : -20 - Math.random()*H*0.3,
-        r: size,
-        vx: (isLeaf ? 18 : 10) * (-0.6 + Math.random()*1.2),
-        vy: (isLeaf ? 40 : 22) + Math.random()*(isLeaf ? 70 : 40),
+        y: randomY ? Math.random()*H : -80 - Math.random()*H*0.2,
+        r,
+        vx: 10 * (-0.9 + Math.random()*1.8),
+        vy: 26 + Math.random()*86,
         rot: Math.random()*Math.PI*2,
-        vr: (-1 + Math.random()*2) * (isLeaf ? 1.2 : 0.6),
-        a: isLeaf ? (0.10 + Math.random()*0.18) : (0.08 + Math.random()*0.14),
-        sway: 0.6 + Math.random()*1.4,
+        vr: (-1 + Math.random()*2) * 1.0,
+        a: 0.07 + Math.random()*0.15,
+        sway: 0.6 + Math.random()*1.9,
         t: Math.random()*1000
       };
     }
 
-    function drawBG(time){
-      bg.clearRect(0,0,W,H);
-      const g = bg.createLinearGradient(0,0,0,H);
-      if(!document.body.classList.contains("mode26")){
-        g.addColorStop(0, "rgba(7,7,9,1)");
-        g.addColorStop(1, "rgba(3,3,4,1)");
-      } else {
-        g.addColorStop(0, "rgba(8,10,14,1)");
-        g.addColorStop(1, "rgba(3,4,6,1)");
-      }
-      bg.fillStyle = g;
-      bg.fillRect(0,0,W,H);
+    function initLeaves(){
+      leaves = [];
+      const n = Math.floor((W*H)/12000);
+      for(let i=0;i<n;i++) leaves.push(makeLeaf(true));
+    }
+
+    function drawSky(time){
+      sky.clearRect(0,0,W,H);
+
+      const g = sky.createLinearGradient(0,0,0,H);
+      g.addColorStop(0, "rgba(10,10,16,1)");
+      g.addColorStop(1, "rgba(2,2,5,1)");
+      sky.fillStyle = g;
+      sky.fillRect(0,0,W,H);
 
       const tt = time*0.00005;
-      const cx = W*(0.52 + 0.04*Math.sin(tt*1.2));
-      const cy = H*(0.26 + 0.04*Math.cos(tt*1.1));
-      const rg = bg.createRadialGradient(cx,cy, 40, cx,cy, Math.max(W,H)*0.70);
-      rg.addColorStop(0, document.body.classList.contains("mode26") ? "rgba(255,255,255,.10)" : "rgba(255,255,255,.06)");
+      const cx = W*(0.52 + 0.05*Math.sin(tt*1.25));
+      const cy = H*(0.22 + 0.05*Math.cos(tt*1.10));
+      const rg = sky.createRadialGradient(cx,cy, 40, cx,cy, Math.max(W,H)*0.75);
+      rg.addColorStop(0, "rgba(255,255,255,.10)");
       rg.addColorStop(1, "rgba(0,0,0,0)");
-      bg.fillStyle = rg;
-      bg.fillRect(0,0,W,H);
+      sky.fillStyle = rg;
+      sky.fillRect(0,0,W,H);
+
+      sky.save();
+      sky.globalCompositeOperation = "lighter";
+      for(const m of mist){
+        sky.globalAlpha = m.a;
+        const gr = sky.createRadialGradient(m.x,m.y, 10, m.x,m.y, m.r);
+        gr.addColorStop(0, "rgba(255,255,255,.10)");
+        gr.addColorStop(1, "rgba(255,255,255,0)");
+        sky.fillStyle = gr;
+        sky.fillRect(m.x-m.r, m.y-m.r, m.r*2, m.r*2);
+      }
+      sky.restore();
+      sky.globalAlpha = 1;
+
+      for(const s of stars){
+        const a = s.a * (0.7 + 0.3*Math.sin((time*0.001*s.tw)+s.ph));
+        sky.globalAlpha = Math.max(0, a);
+        sky.fillStyle = "rgba(255,255,255,1)";
+        sky.beginPath();
+        sky.arc(s.x, s.y, s.r, 0, Math.PI*2);
+        sky.fill();
+      }
+      sky.globalAlpha = 1;
     }
 
-    function startAnimations(){
-      if(started) return;
-      started = true;
-      t0 = performance.now();
-      requestAnimationFrame(loop);
-    }
-
+    let last = performance.now();
     function loop(now){
-      const dt = Math.min(0.033, (now - t0)/1000);
-      t0 = now;
+      const dt = Math.min(0.033, (now-last)/1000);
+      last = now;
 
-      drawBG(now);
-      ctx.clearRect(0,0,W,H);
+      for(const m of mist){
+        m.x += m.vx * dt;
+        m.y += m.vy * dt;
+        if(m.x < -300) m.x = W + 300;
+        if(m.x > W + 300) m.x = -300;
+        if(m.y < -300) m.y = H + 300;
+        if(m.y > H + 300) m.y = -300;
+      }
 
-      for(const f of flakes){
+      drawSky(now);
+      fx.clearRect(0,0,W,H);
+
+      for(const f of leaves){
         f.t += dt;
-        f.x += (f.vx + Math.sin(f.t*2*f.sway)*12) * dt;
+        f.x += (f.vx + Math.sin(f.t*2*f.sway)*10) * dt;
         f.y += f.vy * dt;
         f.rot += f.vr * dt;
 
-        if(f.y > H + 40) Object.assign(f, makeFlake(false));
-        if(f.x < -60) f.x = W + 60;
-        if(f.x > W + 60) f.x = -60;
+        if(f.y > H + 90) Object.assign(f, makeLeaf(false));
+        if(f.x < -120) f.x = W + 120;
+        if(f.x > W + 120) f.x = -120;
 
-        ctx.globalAlpha = f.a;
-        ctx.fillStyle = "rgba(255,255,255,1)";
-        if(f.kind === "snow"){
-          ctx.beginPath(); ctx.arc(f.x, f.y, f.r, 0, Math.PI*2); ctx.fill();
-        } else {
-          ctx.save();
-          ctx.translate(f.x, f.y);
-          ctx.rotate(f.rot);
-          ctx.beginPath(); ctx.ellipse(0, 0, f.r*1.2, f.r*0.7, 0, 0, Math.PI*2); ctx.fill();
-          ctx.restore();
-        }
+        fx.globalAlpha = f.a;
+        fx.fillStyle = "rgba(255,255,255,1)";
+        fx.save();
+        fx.translate(f.x, f.y);
+        fx.rotate(f.rot);
+        fx.beginPath();
+        fx.ellipse(0,0,f.r*1.2,f.r*0.7,0,0,Math.PI*2);
+        fx.fill();
+        fx.restore();
       }
-
-      for(let i=bursts.length-1;i>=0;i--){
-        const b = bursts[i];
-        b.life -= dt;
-        b.x += b.vx*dt;
-        b.y += b.vy*dt;
-        b.vy += 18*dt;
-        b.rot += b.vr*dt;
-
-        const alpha = Math.max(0, b.life/1.25);
-        ctx.globalAlpha = alpha * 0.95;
-        ctx.fillStyle = "rgba(255,255,255,1)";
-        if(b.kind === "snow"){
-          ctx.beginPath(); ctx.arc(b.x, b.y, b.r, 0, Math.PI*2); ctx.fill();
-        } else {
-          ctx.save();
-          ctx.translate(b.x, b.y);
-          ctx.rotate(b.rot);
-          const s = b.r;
-          ctx.beginPath();
-          ctx.moveTo(0, s*0.35);
-          ctx.bezierCurveTo(0, -s*0.25, -s*0.8, -s*0.25, -s*0.8, s*0.25);
-          ctx.bezierCurveTo(-s*0.8, s*0.9, 0, s*1.05, 0, s*1.35);
-          ctx.bezierCurveTo(0, s*1.05, s*0.8, s*0.9, s*0.8, s*0.25);
-          ctx.bezierCurveTo(s*0.8, -s*0.25, 0, -s*0.25, 0, s*0.35);
-          ctx.fill();
-          ctx.restore();
-        }
-        if(b.life <= 0) bursts.splice(i,1);
-      }
+      fx.globalAlpha = 1;
 
       requestAnimationFrame(loop);
     }
 
-    function burst(kind, intensity=1){
-      const overlayRect = document.getElementById("overlay").getBoundingClientRect();
-      const x0 = overlayRect.left + overlayRect.width*0.5;
-      const y0 = overlayRect.top + overlayRect.height*0.78;
-      const baseCount = (kind === "heart" ? 18 : 24);
-      const count = Math.floor(baseCount * Math.max(1, intensity));
-      for(let i=0;i<count;i++){
-        const ang = (-Math.PI/2) + (-0.95 + Math.random()*1.9);
-        const spd = 160 + Math.random()*260;
-        bursts.push({
-          kind,
-          x: x0, y: y0,
-          vx: Math.cos(ang)*spd,
-          vy: Math.sin(ang)*spd,
-          r: kind === "heart" ? (3 + Math.random()*5) : (1.4 + Math.random()*2.6),
-          life: 1.25 + Math.random()*0.5,
-          rot: Math.random()*Math.PI*2,
-          vr: (-1 + Math.random()*2) * 2.2
-        });
-      }
-    }
-    heartsBtn.addEventListener("click", ()=> burst("heart", 1));
-    snowBtn.addEventListener("click", ()=> burst("snow", 1));
-
-    function softSwitchFlakes(){
-      for(let i=0;i<Math.min(44, flakes.length);i++){
-        const f = flakes[Math.floor(Math.random()*flakes.length)];
-        Object.assign(f, makeFlake(true));
-      }
-    }
-
-    // init
     resize();
-    setTimeout(()=>{ try{ key.focus(); }catch(e){} }, 250);
+    requestAnimationFrame(loop);
   </script>
 </body>
 </html>
