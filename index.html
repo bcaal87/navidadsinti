@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-  <title>—</title>
+  <title>Final del camino</title>
   <style>
     html,body{height:100%;margin:0}
     body{
@@ -203,14 +203,14 @@
   <div class="wrap">
     <div class="card">
       <div class="top">
-        <div class="badge"><span class="dot"></span>—</div>
+        <div class="badge"><span class="dot"></span>Final del camino</div>
         <div class="actions">
-          <button class="btn" id="love">♥ Corazones</button>
-          <button class="btn" id="replay">↺ Releer</button>
+          <button class="btn" id="love">🍂 Hojas</button>
+          <button class="btn" id="replay">↺ Reiniciar</button>
         </div>
       </div>
 
-      <div class="title">Te amo</div>
+      <div class="title">El final también es un comienzo</div>
 
       <div class="box">
         <p class="text" id="text"></p>
@@ -229,66 +229,23 @@
 
   <div class="unlock" id="unlock">
     <div class="unlockCard">
-      <div class="unlockTitle">Toca una vez</div>
-      <div class="unlockP">Para escuchar la melodía.</div>
-      <button class="unlockBtn" id="unlockBtn">Escuchar</button>
+      <div class="unlockTitle">Activa el sonido</div>
+      <div class="unlockP">Toca para escuchar la melodía.</div>
+      <button class="unlockBtn" id="unlockBtn">Reproducir</button>
     </div>
   </div>
 
   <script>
-    // ===== Texto (tuyo + un poco más, sin exagerar) =====
+    // ===== Texto =====
     const full =
-`Te amo… y aunque el tiempo pase,
-no encuentro una forma honesta de dejar de hacerlo.
+`Una vez me preguntaron:
+“¿Qué es peor?
+¿Amar a alguien a quien no puedes tener,
+o tener a alguien a quien no puedes amar?”
 
-A veces me descubro deseando algo tan simple
-como volver a verte,
-abrazarte sin decir nada
-y quedarme ahí, como si el mundo pudiera detenerse un momento.
-
-Hay días en los que todo me recuerda a ti:
-tu voz,
-tus gestos,
-la paz que tenía la vida cuando estabas.
-Ahora todo se siente más lento… más vacío.
-
-Tu ausencia duele.
-Duele en silencio.
-Pero aun así, te agradezco.
-Porque fuiste un amor bonito,
-de esos que no se olvidan,
-de los que se quedan a vivir en el alma aunque ya no estén.
-
-No te voy a mentir:
-hay un vacío enorme en mi corazón.
-Extraño saber de ti,
-extraño leerte.
-Y aunque comprendo tu silencio,
-solo espero que estés bien.
-Si algún día necesitas ser escuchada,
-o simplemente leída…
-aquí sigo, sin irme del todo.
-
-A veces me encierro en mi habitación
-y miro nuestras fotos.
-Ahí todavía te encuentro,
-en cada detalle,
-en cada recuerdo que se niega a desaparecer.
-
-Perdóname por amarte tanto
-y no saber soltarte.
-Creo en el amor…
-y tal vez por eso no logro dejarte ir, Analú.
-Han sido días difíciles,
-días en los que solo he querido escucharte,
-aunque sea una vez más.
-
-No sé cómo seguir…
-solo sé que me duele.
-Tengo el corazón roto, mi Analú.
-
-…
-Te amo.`;
+Y respondí:
+“Dejar ir a alguien
+a quien jamás podrás dejar de amar.”`;
 
     // ===== Fecha y hora =====
     document.getElementById("stamp").textContent =
@@ -380,7 +337,7 @@ Te amo.`;
     function spawnHeart(x = Math.random()*innerWidth){
       const el = document.createElement("div");
       el.className = "heart";
-      el.textContent = "❤";
+      el.textContent = "🍂";
       const size = (16 + Math.random()*18).toFixed(0) + "px";
       const dur  = (2400 + Math.random()*2200).toFixed(0) + "ms";
       const drift = ((-60 + Math.random()*120).toFixed(0)) + "px";
